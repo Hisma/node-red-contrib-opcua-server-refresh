@@ -25,7 +25,7 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: tar -czvf distrib.tar.gz opcuaCompact examples package.json docs index.js README.md CHANGELOG.md
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: build-folders
           path: distrib.tar.gz
@@ -35,7 +35,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: 20
