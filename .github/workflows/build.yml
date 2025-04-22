@@ -36,9 +36,6 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-        with:
-          name: build-folders-node-${{ matrix.node }}
-          path: distrib.tar.gz
       - uses: actions/setup-node@v4
         with:
           node-version: 20
