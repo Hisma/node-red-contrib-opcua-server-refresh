@@ -13,7 +13,7 @@ on:
       - main
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         node: [14, 16, 18]
@@ -31,7 +31,7 @@ jobs:
           path: distrib.tar.gz
 
   publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: build
     if: github.ref == 'refs/heads/master'
     steps:
