@@ -7,7 +7,7 @@ This is a fork of the original work of Klaus Landorf by Richard Meyer.  The orig
 * loading of nodeset xml files from inside the node configuration
 * full opc-ua security policy support
 
-The goal of this projec is to be able to build modern node opc-ua servers within node-red that support most essential features.
+The goal of this project is to be able to build modern node opc-ua servers within node-red that support most essential features.
 
 
 ## Core
@@ -74,12 +74,6 @@ Example projects are provided as part of the project in the `examples` folder.  
 [Link to Example Flows](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/tree/master/examples)
 You can simply copy the json and import them into your flows.  
 There are two examples - one is simply a copy of the example provided by default with the project called `example-server.json`.  The other is an example that simulates data coming from a PLC in node-red and uses flow context memory to pull the dynamic data in data from outside the server called `example-with-context.json`.
-
-## Contribution
-
-**Yes, sure!** Please help us to make it even better and send your pull requests or tests!
-
-#### Happy coding!
 
 ## License
 
