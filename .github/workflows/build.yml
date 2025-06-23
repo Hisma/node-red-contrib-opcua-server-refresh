@@ -22,34 +22,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: TypeScript compilation
         run: npm run build:ts
-        
+
       - name: Run full test suite
         run: npm test
-        
+
       - name: Build package
         run: npm run build
-        
+
       - name: Version consistency check
         run: |
           echo "🔍 Checking version consistency across project files..."
-          
-          # Get version from package.json
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           echo "📦 Package version: $PACKAGE_VERSION"
-          
-          # Check if this is a minor release (0.x.0) - requires README update
+
+          # Minor release -> check README header
           if [[ $PACKAGE_VERSION =~ ^[0-9]+\.[1-9][0-9]*\.0$ ]]; then
             echo "🎯 Minor release detected - checking README.md version header"
             if ! grep -q "## 🎉 Version $PACKAGE_VERSION - Major Release" README.md; then
@@ -61,23 +59,23 @@ jobs:
           else
             echo "ℹ️  Patch release (0.0.x) - skipping README.md version check"
           fi
-          
-          # Always check CHANGELOG.md has entry for current version (supports link format)
+
+          # Always check CHANGELOG.md has an entry
           if ! grep -q "\[$PACKAGE_VERSION\]" CHANGELOG.md; then
             echo "❌ CHANGELOG.md missing entry for version $PACKAGE_VERSION"
             echo "💡 Please add release notes to CHANGELOG.md for version $PACKAGE_VERSION"
             exit 1
           fi
-          
+
           echo "✅ Version consistency check passed!"
-        
+
       - name: Security audit
         run: npm audit --audit-level=high --production
         continue-on-error: true
-        
+
       - name: Create distribution artifact
         run: tar -czvf distrib.tar.gz src examples package.json docs index.js README.md CHANGELOG.md
-        
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -95,121 +93,91 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build for production
         run: npm run build
-        
-      - name: Extract package version
-        id: package-version
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-        
+
+      - name: Extract version & release notes from CHANGELOG
+        id: extract_changelog
+        run: |
+          # Grab the version from the top header
+          VERSION=$(grep -m1 '^# \[' CHANGELOG.md | sed -E 's/^# \[([^]]+)\].*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Capture the notes between this header and the next
+          BODY=$(awk "/^# \[$VERSION\]/ {flag=1; next} /^# \[/ && flag {exit} flag" CHANGELOG.md)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_AUTH_TOKEN }}
           access: public
-          
+
       - name: Verify NPM Publication (CRITICAL)
         run: |
           echo "🔍 Verifying NPM publication..."
-          
-          # Wait for NPM propagation (NPM can take 30-60 seconds)
           echo "⏳ Waiting for NPM propagation..."
           sleep 60
-          
-          # Extract expected version
           EXPECTED_VERSION=$(node -p "require('./package.json').version")
           echo "Expected version: $EXPECTED_VERSION"
-          
-          # Verify package exists and version matches
           PUBLISHED_VERSION=$(npm view node-red-contrib-opcua-server-refresh version 2>/dev/null || echo "NOT_FOUND")
-          
+
           if [ "$PUBLISHED_VERSION" = "NOT_FOUND" ]; then
             echo "❌ CRITICAL FAILURE: Package not found on NPM!"
-            echo "This indicates NPM publication failed."
             exit 1
           fi
-          
+
           if [ "$PUBLISHED_VERSION" != "$EXPECTED_VERSION" ]; then
             echo "❌ CRITICAL FAILURE: Version mismatch!"
             echo "Published: $PUBLISHED_VERSION"
             echo "Expected: $EXPECTED_VERSION"
             exit 1
           fi
-          
-          # Test installation
+
+          # Test installation and Node-RED config
           echo "🧪 Testing package installation..."
           mkdir -p /tmp/test-install && cd /tmp/test-install
           npm init -y >/dev/null 2>&1
-          
+
           if ! npm install node-red-contrib-opcua-server-refresh@$EXPECTED_VERSION --silent; then
             echo "❌ CRITICAL FAILURE: Package installation failed!"
             exit 1
           fi
-          
-          # Verify Node-RED configuration
+
           node -e "
             const pkg = require('./node_modules/node-red-contrib-opcua-server-refresh/package.json');
             if (!pkg['node-red']) throw new Error('Missing node-red configuration');
             if (!pkg['node-red'].nodes) throw new Error('Missing node-red nodes configuration');
             console.log('✅ Node-RED configuration verified');
           "
-          
+
           echo "✅ NPM publication verification PASSED"
           echo "📦 Package: node-red-contrib-opcua-server-refresh@$EXPECTED_VERSION"
           echo "🔗 NPM URL: https://www.npmjs.com/package/node-red-contrib-opcua-server-refresh"
-          echo ""
           echo "🔔 MANUAL ACTION REQUIRED:"
           echo "1. Go to https://flows.nodered.org"
           echo "2. Click '+' button → 'node'"
           echo "3. Submit: node-red-contrib-opcua-server-refresh"
           echo "4. Monitor: https://flows.nodered.org/node/node-red-contrib-opcua-server-refresh"
-          
+
       - name: Create GitHub Release
         if: success()
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.package-version.outputs.version }}
-          release_name: Release v${{ steps.package-version.outputs.version }}
-          body: |
-            ## 🎉 Version ${{ steps.package-version.outputs.version }} Release
-            
-            ### 🚀 Major Improvements
-            - **Complete TypeScript Migration**: Enhanced developer experience with full type safety
-            - **Critical Security Fixes**: Replaced vulnerable vm2 with secure Node.js vm implementation
-            - **Latest node-opcua Support**: Updated to version 2.156.0 with all compatibility fixes
-            - **Comprehensive Test Suite**: 61 tests with 100% pass rate ensuring reliability
-            
-            ### 🔒 Security Enhancements
-            - Eliminated critical CVE vulnerabilities (CVE-2023-29017, CVE-2023-30547)
-            - Enhanced VM sandbox security with prototype pollution protection
-            - Improved input validation and error handling
-            
-            ### ⚡ Performance & Reliability
-            - Modern TypeScript architecture for better maintainability
-            - Enhanced error handling and timeout management
-            - Improved build system with automated testing
-            
-            ### 📦 Installation
-            ```bash
-            npm install node-red-contrib-opcua-server-refresh
-            ```
-            
-            ### 🔗 Links
-            - **NPM Package**: https://www.npmjs.com/package/node-red-contrib-opcua-server-refresh
-            - **Node-RED Catalog**: https://flows.nodered.org/node/node-red-contrib-opcua-server-refresh
-            - **Documentation**: See README.md and CHANGELOG.md for detailed changes
-            
-          draft: false
-          prerelease: false
+          tag_name: v${{ steps.extract_changelog.outputs.version }}
+          release_name: Release v${{ steps.extract_changelog.outputs.version }}
+          body: ${{ steps.extract_changelog.outputs.body }}
