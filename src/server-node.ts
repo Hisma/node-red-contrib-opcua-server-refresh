@@ -7,7 +7,6 @@ import { OPCUAServer } from "node-opcua";
 import * as opcuaLibrary from "node-opcua";
 import { NodeRED, NodeRedNode, NodeConfig } from "./types";
 import coreServer from "./core/server";
-import serverSandbox from "./core/server-sandbox";
 
 export default function (RED: NodeRED): void {
   "use strict";
@@ -91,73 +90,60 @@ export default function (RED: NodeRED): void {
             throw new Error("OPC UA Server not initialized");
           }
 
-          // Initialize the sandbox and run the addressSpaceScript within it
+          // Execute the address space script directly in the main context
+          // This eliminates VM context boundary issues with Variant instanceof checks
           const addressSpace = opcuaServer.engine.addressSpace;
           if (!addressSpace) {
             throw new Error("Address space not available");
           }
 
-          serverSandbox.initialize(
-            node,
-            coreServer,
-            opcuaLibrary, // Pass the actual node-opcua library
-            opcuaServer, // Pass the OPC UA server instance
-            addressSpace, // Pass the address space
-            node.contribOPCUACompact?.eventObjects || {}, // Pass eventObjects
-            (node: NodeRedNode, vm: any) => {
-              if (!node.contribOPCUACompact) {
-                node.contribOPCUACompact = {};
-              }
-              node.contribOPCUACompact.vm = vm;
+          const scriptFunction =
+            node.contribOPCUACompact?.constructAddressSpaceScript;
+          if (typeof scriptFunction === "function") {
+            try {
+              coreServer.debugLog(
+                "Executing address space script directly in main context"
+              );
 
-              try {
-                // Execute the addressSpaceScript within the sandbox
-                // We need to pass the function code as a string to the VM
-                const scriptFunction =
-                  node.contribOPCUACompact.constructAddressSpaceScript;
-                if (typeof scriptFunction === "function") {
-                  // Convert function to string and execute in VM
-                  const functionCode = `(${scriptFunction.toString()})`;
-                  vm.run(`
-                    const addressSpaceFunction = ${functionCode};
-                    addressSpaceFunction(
-                      server,
-                      addressSpace,
-                      opcua,
-                      eventObjects,
-                      () => {
-                        // Address space construction completed
-                        node.status({ fill: "green", shape: "dot", text: "active" });
-                        node.emit("server_running");
-                      }
-                    );
-                  `);
-                } else {
-                  throw new Error(
-                    "Address space script is not a valid function"
+              // Call the script function directly in the main context
+              // This ensures the same Variant/DataValue classes are used throughout
+              scriptFunction(
+                opcuaServer, // server instance
+                addressSpace, // address space to populate
+                opcuaLibrary, // real node-opcua module (same instance as server)
+                node.contribOPCUACompact?.eventObjects || {}, // event objects
+                () => {
+                  // Address space construction completed callback
+                  coreServer.debugLog(
+                    "Address space construction completed successfully"
                   );
+                  node.status({ fill: "green", shape: "dot", text: "active" });
+                  node.emit("server_running");
                 }
+              );
 
+              if (node.contribOPCUACompact) {
                 node.contribOPCUACompact.initialized = true;
-                node.emit("server_node_running");
-                coreServer.setStatusActive(node);
-              } catch (err) {
-                const error = err as Error;
-                node.error(
-                  `Error executing addressSpaceScript: ${error.message}`
-                );
-                coreServer.errorLog(
-                  `Address space script execution error: ${
-                    error.stack || error.message
-                  }`
-                );
-                coreServer.setStatusError(
-                  node,
-                  `Address space script execution error: ${error.message}`
-                );
               }
+              node.emit("server_node_running");
+              coreServer.setStatusActive(node);
+            } catch (err) {
+              const error = err as Error;
+              node.error(`Address space script failed: ${error.message}`);
+              coreServer.errorLog(
+                `Address space script execution error: ${
+                  error.stack || error.message
+                }`
+              );
+              coreServer.setStatusError(
+                node,
+                `Error in script: ${error.message}`
+              );
             }
-          );
+          } else {
+            node.error("No addressSpaceScript function to execute");
+            coreServer.setStatusError(node, "No valid address space script");
+          }
         })
         .catch((err: Error) => {
           /* istanbul ignore next */

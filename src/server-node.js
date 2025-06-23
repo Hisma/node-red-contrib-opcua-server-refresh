@@ -1,10 +1,33 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const opcuaLibrary = __importStar(require("node-opcua"));
 const server_1 = __importDefault(require("./core/server"));
-const server_sandbox_1 = __importDefault(require("./core/server-sandbox"));
 function default_1(RED) {
     "use strict";
     function OPCUACompactServerRefreshNode(nodeConfig) {
@@ -53,44 +76,32 @@ function default_1(RED) {
                 if (!addressSpace) {
                     throw new Error("Address space not available");
                 }
-                server_sandbox_1.default.initialize(node, server_1.default, opcuaServer, addressSpace, node.contribOPCUACompact?.eventObjects || {}, (node, vm) => {
-                    if (!node.contribOPCUACompact) {
-                        node.contribOPCUACompact = {};
-                    }
-                    node.contribOPCUACompact.vm = vm;
+                const scriptFunction = node.contribOPCUACompact?.constructAddressSpaceScript;
+                if (typeof scriptFunction === "function") {
                     try {
-                        const scriptFunction = node.contribOPCUACompact.constructAddressSpaceScript;
-                        if (typeof scriptFunction === 'function') {
-                            const functionCode = `(${scriptFunction.toString()})`;
-                            vm.run(`
-                    const addressSpaceFunction = ${functionCode};
-                    addressSpaceFunction(
-                      server,
-                      addressSpace,
-                      opcua,
-                      eventObjects,
-                      () => {
-                        // Address space construction completed
-                        node.status({ fill: "green", shape: "dot", text: "active" });
-                        node.emit("server_running");
-                      }
-                    );
-                  `);
+                        server_1.default.debugLog("Executing address space script directly in main context");
+                        scriptFunction(opcuaServer, addressSpace, opcuaLibrary, node.contribOPCUACompact?.eventObjects || {}, () => {
+                            server_1.default.debugLog("Address space construction completed successfully");
+                            node.status({ fill: "green", shape: "dot", text: "active" });
+                            node.emit("server_running");
+                        });
+                        if (node.contribOPCUACompact) {
+                            node.contribOPCUACompact.initialized = true;
                         }
-                        else {
-                            throw new Error('Address space script is not a valid function');
-                        }
-                        node.contribOPCUACompact.initialized = true;
                         node.emit("server_node_running");
                         server_1.default.setStatusActive(node);
                     }
                     catch (err) {
                         const error = err;
-                        node.error(`Error executing addressSpaceScript: ${error.message}`);
+                        node.error(`Address space script failed: ${error.message}`);
                         server_1.default.errorLog(`Address space script execution error: ${error.stack || error.message}`);
-                        server_1.default.setStatusError(node, `Address space script execution error: ${error.message}`);
+                        server_1.default.setStatusError(node, `Error in script: ${error.message}`);
                     }
-                });
+                }
+                else {
+                    node.error("No addressSpaceScript function to execute");
+                    server_1.default.setStatusError(node, "No valid address space script");
+                }
             })
                 .catch((err) => {
                 node.warn(err);

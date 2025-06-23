@@ -1,4 +1,29 @@
-# [0.2.3](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.2...v0.2.3) (2025-06-23)
+# [0.2.4](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.3...v0.2.4) (2025-06-23)
+
+### Major Architectural Improvements
+
+* **BREAKING:** Replace VM sandbox execution with direct function calls to eliminate V8 context boundary issues
+* **vm:** Fix critical "bindVariable returns invalid result" error by removing VM context boundaries
+* **performance:** Improve execution performance by eliminating VM overhead
+* **reliability:** Ensure Variant instanceof checks work correctly across all scenarios
+* **architecture:** Simplify codebase by removing complex VM context management
+
+### Bug Fixes
+
+* **testing:** Replace VM-based tests with direct execution integration tests
+* **cleanup:** Remove unused server-sandbox module and related dependencies
+* **types:** Clean up TypeScript imports and remove unused sandbox types
+
+### Technical Details
+
+This release fundamentally changes how address space scripts are executed. Instead of running scripts in a separate VM context (which caused V8 realm boundary issues), scripts now execute directly in the main Node.js context. This ensures that:
+
+- `instanceof` checks work correctly for Variant and DataValue objects
+- No "bindVariable returns invalid result" errors occur
+- Better performance due to eliminated VM overhead
+- Simpler, more maintainable codebase
+
+## [0.2.3](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.2...v0.2.3) (2025-06-23)
 
 ### Bug Fixes
 
