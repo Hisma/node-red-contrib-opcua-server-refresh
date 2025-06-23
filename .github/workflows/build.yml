@@ -90,24 +90,31 @@ jobs:
           echo "🔍 Debugging changelog extraction..."
           echo "First few lines of CHANGELOG.md:"
           head -5 CHANGELOG.md
-
-          # Find the first header (## or #) containing a version number
-          FIRST_LINE=$(grep -m1 '^##\? ' CHANGELOG.md)
+          
+          # Extract version from the first changelog entry (handles URL format)
+          FIRST_LINE=$(grep -m1 '^# \[' CHANGELOG.md)
           echo "First changelog line: '$FIRST_LINE'"
-
-          # Extract the semver (e.g. 0.2.4) from that line
-          VERSION=$(echo "$FIRST_LINE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          
+          VERSION=$(echo "$FIRST_LINE" | sed -E 's/^# \[([^]]+)\](\([^)]*\))?.*/\1/')
           echo "Extracted version: '$VERSION'"
-
+          
+          # Validate version is not empty
           if [ -z "$VERSION" ]; then
-            echo "❌ ERROR: Version extraction failed"
+            echo "❌ ERROR: Version extraction failed - trying alternative method"
+            # Alternative extraction method
+            VERSION=$(head -1 CHANGELOG.md | grep -o '\[.*\]' | tr -d '[]' | cut -d'(' -f1)
+            echo "Alternative extraction result: '$VERSION'"
+          fi
+          
+          if [ -z "$VERSION" ]; then
+            echo "❌ CRITICAL: All version extraction methods failed"
             exit 1
           fi
-
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Successfully extracted version: $VERSION"
 
-          # Grab everything between the first and second headers as release notes
+          # Extract release notes between the first and second version headers
           BODY=$(awk '
             /^# \[/ { 
               if (count == 0) { 
@@ -117,15 +124,17 @@ jobs:
                 exit 
               } 
             } 
-            count > 0 && /^[^#]/ { 
-              print 
+            count > 0 { 
+              if (/^## \[/) exit;
+              if (!/^$/) print 
             }
-          ' CHANGELOG.md | sed '/^$/d' | head -20)
+          ' CHANGELOG.md)
           
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          echo "✅ Extracted release notes"
+          
+          echo "✅ Extracted release notes (${#BODY} characters)"
 
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
