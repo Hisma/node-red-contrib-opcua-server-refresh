@@ -2,7 +2,7 @@
 
 A modern, secure, and TypeScript-powered OPC UA server for Node-RED based on the latest node-opcua library.
 
-[![npm version](https://badge.fury.io/js/node-red-contrib-opcua-server-refresh.svg)](https://badge.fury.io/js/node-red-contrib-opcua-server-refresh)
+[![npm version](https://img.shields.io/npm/v/node-red-contrib-opcua-server-refresh.svg)](https://www.npmjs.com/package/node-red-contrib-opcua-server-refresh)
 [![Build Status](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/workflows/Build,%20Test,%20and%20Publish/badge.svg)](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
