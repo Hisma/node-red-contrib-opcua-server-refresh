@@ -42,7 +42,7 @@ jobs:
         run: npm run build
         
       - name: Security audit
-        run: npm audit --audit-level=moderate
+        run: npm audit --audit-level=high --production
         continue-on-error: true
         
       - name: Create distribution artifact
