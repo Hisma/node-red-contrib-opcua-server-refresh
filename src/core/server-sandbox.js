@@ -52,7 +52,7 @@ const serverSandboxModule = {
             sandboxNodeContext: {
                 set: function (...args) {
                     const [key, value, store] = args;
-                    node.context().set(key, value, store);
+                    return node.context().set(key, value, store);
                 },
                 get: function (...args) {
                     const [key, store] = args;
@@ -72,7 +72,7 @@ const serverSandboxModule = {
             sandboxGlobalContext: {
                 set: function (...args) {
                     const [key, value, store] = args;
-                    node.context().global.set(key, value, store);
+                    return node.context().global.set(key, value, store);
                 },
                 get: function (...args) {
                     const [key, store] = args;
@@ -86,7 +86,7 @@ const serverSandboxModule = {
             sandboxEnv: {
                 get: function (envVar) {
                     const flow = node._flow;
-                    return flow.getSetting(envVar);
+                    return flow ? flow.getSetting(envVar) : undefined;
                 },
             },
             setTimeout: function (callback, delay, ...args) {
@@ -140,6 +140,12 @@ const serverSandboxModule = {
                 }
             },
         };
+        const persistentContext = vm.createContext(sandbox);
+        vm.runInContext(`
+      Object.freeze(Object.prototype);
+      Object.freeze(Array.prototype);
+      Object.freeze(Function.prototype);
+    `, persistentContext);
         const secureVM = {
             run: function (code, filename) {
                 try {
@@ -149,13 +155,8 @@ const serverSandboxModule = {
                     if (code.includes("require(") && !code.includes("// allow-require")) {
                         throw new Error("require() is not allowed in user scripts");
                     }
-                    const secureContext = vm.createContext(sandbox);
-                    Object.freeze(Object.prototype);
-                    Object.freeze(Array.prototype);
-                    Object.freeze(Function.prototype);
                     const script = new vm.Script(code, {
                         filename: filename || "user-script.js",
-                        timeout: 5000,
                         displayErrors: true,
                     });
                     const runOptions = {
@@ -163,7 +164,7 @@ const serverSandboxModule = {
                         displayErrors: true,
                         breakOnSigint: true,
                     };
-                    return script.runInContext(secureContext, runOptions);
+                    return script.runInContext(persistentContext, runOptions);
                 }
                 catch (error) {
                     const err = error;

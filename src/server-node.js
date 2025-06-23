@@ -137,4 +137,3 @@ function default_1(RED) {
     RED.library.register("opcua");
 }
 exports.default = default_1;
-;

@@ -132,7 +132,7 @@ const coreServerModule = {
         const privateKeyFile = node.privateCertificateFile || serverKeyFile("2048");
         const registerServerMethod = 1;
         return {
-            port: typeof node.port === "string" ? parseInt(node.port) : (node.port || 4334),
+            port: typeof node.port === "string" ? parseInt(node.port) : node.port || 4334,
             resourcePath: node.endpoint || "/UA/NodeRED/Compact",
             buildInfo: {
                 productName: "Node-RED OPC UA Compact Server",

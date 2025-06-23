@@ -1,48 +1,84 @@
 <!--
     MIT License
     Copyright (c) 2018-2022 Klaus Landsdorf (http://node-red.plus/)
-    Updated by Richard Meyer 2024
+    Updated by Richard Meyer 2025 - Version 0.2.0
 -->
 <script type="text/x-red" data-help-name="opcua-compact-server-refresh">
-  <h2>OPC UA Compact Server Refresh</h2>
+  <h2>OPC UA Compact Server Refresh v0.2.0</h2>
 
-  <p>The Compact Server node is an OPC UA server with a programmable address space to build your own information model.
-  The address space is to expand with JS source code based on node-opcua API and OPC UA specification.</p>
+  <p><strong>A modernized, secure OPC UA server</strong> with TypeScript implementation and enhanced security features.
+  This node provides a programmable address space to build your own information model using JavaScript code based on the node-opcua API and OPC UA specification.</p>
 
-  The product URI have to be unique if you set some other name as the default is! (default: NodeOPCUA-Server-(port))
+  <p><strong>⚠️ Important:</strong> The product URI must be unique if you set a custom name (default: NodeOPCUA-Server-(port))</p>
 
-  <p>Default enpoint: opc.tcp://localhost:54840</p>
-  <p>Named enpoint: opc.tcp://localhost:54840/UA/NodeRED/Compact</p>
-  <p>Default discovery: opc.tcp://localhost:4840/UADiscovery</p>
-  <p>all discovery: opc.tcp://localhost:4840/</p>
+  <h3>🔗 Default Endpoints</h3>
+  <ul>
+    <li><strong>Default endpoint:</strong> opc.tcp://localhost:54840</li>
+    <li><strong>Named endpoint:</strong> opc.tcp://localhost:54840/UA/NodeRED/Compact</li>
+    <li><strong>Default discovery:</strong> opc.tcp://localhost:4840/UADiscovery</li>
+    <li><strong>All discovery:</strong> opc.tcp://localhost:4840/</li>
+  </ul>
 
-  <h3>Options</h3>
-  <p>If you need more information about all options read the node-opcua API, please!</p>
+  <h3>🚀 Version 0.2.0 Improvements</h3>
+  <ul>
+    <li><strong>Complete TypeScript Migration:</strong> Enhanced developer experience with full type safety</li>
+    <li><strong>Critical Security Fixes:</strong> Replaced vulnerable vm2 with secure Node.js vm implementation</li>
+    <li><strong>Latest node-opcua Support:</strong> Updated to version 2.156.0 with compatibility fixes</li>
+    <li><strong>Enhanced Security:</strong> Removed deprecated security policies (Basic128Rsa15, Basic256)</li>
+    <li><strong>Comprehensive Testing:</strong> 61 tests ensuring reliability and stability</li>
+  </ul>
 
-  <p>The 'Delay Before Init' is to init the server node after some delay.</p>
+  <h3>⚙️ Configuration Options</h3>
+  <p>For detailed information about all configuration options, please refer to the <a href="https://node-opcua.github.io/" target="_blank">node-opcua API documentation</a>.</p>
 
-  <p>The 'Shutdown Timeout' is to tell node-opcua the server shutdown timeout.</p>
+  <ul>
+    <li><strong>Delay Before Init:</strong> Initialize the server node after a specified delay (milliseconds)</li>
+    <li><strong>Shutdown Timeout:</strong> Server shutdown timeout for graceful closure (milliseconds)</li>
+    <li><strong>Delay On Close:</strong> Close the server node with delay relative to other nodes (milliseconds)</li>
+  </ul>
 
-  <p>The 'Delay On Close' is to close the server node with delay to all other nodes.</p>
+  <h3>🔒 Security & Certificates</h3>
+  <p>The server provides demo NodeOPCUA certificates and private keys for development. For production use, configure your own certificate and private key files.</p>
+  
+  <p><strong>Supported Security Policies:</strong></p>
+  <ul>
+    <li><strong>None:</strong> No security (development only)</li>
+    <li><strong>Basic256Sha256:</strong> Recommended for production use</li>
+  </ul>
 
-  <h3>Certificates</h3>
-  <p>The server provides simple NodeOPCUA demo certificates and private keys.</p>
-  <p>You could set up your own certificate and private key files. This is optional.</p>
+  <p><strong>Note:</strong> Deprecated security policies (Basic128Rsa15, Basic256) have been removed for enhanced security.</p>
 
-  <h3>User</h3>
-  <p>The user list is to set up users to the server. It is stored with Node-RED credentials best practice.</p>
+  <h3>👥 User Management</h3>
+  <p>Configure user authentication for the server. User credentials are stored securely using Node-RED's credentials best practices.</p>
 
-  <h3>XML NodeSets</h3>
-  <p>That is static for now to add ISA95, DI, and Auto-ID to a server via XML NodeSet.</p>
+  <h3>📄 XML NodeSets</h3>
+  <p>Add industry-standard nodesets including ISA95, DI (Device Integration), and Auto-ID to extend your server's capabilities.</p>
 
-  <h3>AddressSpace</h3>
-  <p>A function like programming editor to construct your own address space in the server.</p>
+  <h3>🏗️ Address Space Programming</h3>
+  <p>Use the built-in JavaScript editor to construct your custom address space. The editor provides:</p>
+  <ul>
+    <li>Syntax highlighting and code completion</li>
+    <li>Access to the full node-opcua API</li>
+    <li>Secure sandbox execution environment</li>
+    <li>Example code templates for common patterns</li>
+  </ul>
 
-  <h3>Discovery</h3>
-  <p>That gives you access to the servers discovery node-opcua parameters.
-  Be sure to have a LDS running if you set LDS instead of HIDDEN.</p>
+  <h3>🔍 Discovery Services</h3>
+  <p>Configure how your server announces itself to the network:</p>
+  <ul>
+    <li><strong>HIDDEN:</strong> Server doesn't expose itself externally</li>
+    <li><strong>MDNS:</strong> Server publishes itself via mDNS multicast</li>
+    <li><strong>LDS:</strong> Server registers with Local Discovery Server (requires LDS running)</li>
+  </ul>
 
-  <p>Set showErrors to get errors from node-opcua on browse.</p>
+  <p><strong>Tip:</strong> Enable "Show Errors" to get detailed error messages from node-opcua during browsing operations.</p>
+
+  <h3>📚 Additional Resources</h3>
+  <ul>
+    <li><a href="https://github.com/Hisma/node-red-contrib-opcua-server-refresh" target="_blank">GitHub Repository</a></li>
+    <li><a href="https://node-opcua.github.io/" target="_blank">Node-OPCUA Documentation</a></li>
+    <li><a href="https://opcfoundation.org/" target="_blank">OPC Foundation</a></li>
+  </ul>
 </script>
 
 <script type="text/javascript">
@@ -690,10 +726,11 @@
               <span data-i18n="opcua-compact-contrib.label.securityPolicy"></span></label>
               <ul style="margin-left:80px">
                   <li>None</li>
-                  <li>Basic128Rsa15</li>
-                  <li>Basic256</li>
-                  <li>Basic256Sha256</li>
+                  <li>Basic256Sha256 (Recommended)</li>
               </ul>
+              <p style="margin-left:80px; font-size:12px; color:#666;">
+                <strong>Note:</strong> Deprecated policies (Basic128Rsa15, Basic256) have been removed for security.
+              </p>
           </div>
           <div class="form-row">
               <!-- MessageSecurityMode enum via REST -->
