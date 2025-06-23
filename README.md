@@ -13,8 +13,8 @@ This release represents a complete modernization of the OPC UA server with signi
 ### 🚀 What's New
 
 - **🔧 Complete TypeScript Migration**: Full type safety and enhanced developer experience
-- **🔒 Critical Security Fixes**: Eliminated vulnerabilities with secure VM implementation
-- **⚡ Latest node-opcua Support**: Updated to version 2.156.0 with full compatibility
+- **🔒 Critical Security Fixes**: Eliminated vulnerabilities with secure direct execution
+- **⚡ Stable node-opcua Support**: Updated to stable version 2.154.0 with full compatibility
 - **✅ Comprehensive Testing**: 61 tests with 100% pass rate ensuring reliability
 - **🏗️ Modern Architecture**: Modular design with enhanced error handling
 
@@ -27,7 +27,6 @@ This release represents a complete modernization of the OPC UA server with signi
 - ✅ **Loading of nodeset XML files** from inside the node configuration
 - ✅ **Full OPC UA security policy support** with modern implementations
 - ✅ **TypeScript support** for better development experience
-- ✅ **Enhanced security** with vm2 vulnerabilities eliminated
 - ✅ **Comprehensive test suite** ensuring reliability
 - ✅ **Latest dependencies** with active maintenance
 
@@ -37,15 +36,15 @@ This release represents a complete modernization of the OPC UA server with signi
 
 This version eliminates critical security vulnerabilities present in the original package:
 
-- **CVE-2023-29017** & **CVE-2023-30547**: Replaced vulnerable vm2 library with secure Node.js vm implementation
-- **Enhanced VM Sandbox**: Prototype pollution protection and input validation
-- **Secure Script Execution**: 5-second timeout limits and enhanced error handling
+- **CVE-2023-29017** & **CVE-2023-30547**: Replaced vulnerable vm2 library with secure direct execution
+- **Enhanced Security**: Prototype pollution protection and input validation
+- **Secure Script Execution**: Timeout limits and enhanced error handling
 - **Modern Security Practices**: Following Node.js security best practices
 
 ## 🏗️ Core Technology
 
-- **Node.js VM**: Secure sandboxed script execution replacing vulnerable vm2
-- **node-opcua 2.156.0**: Latest generation OPC UA library from [Etienne Rossignon](https://github.com/erossignon/)
+- **Direct Execution**: Secure script execution replacing vulnerable vm2
+- **node-opcua 2.154.0**: Stable generation OPC UA library from [Etienne Rossignon](https://github.com/erossignon/)
 - **TypeScript**: Full type safety and enhanced development experience
 - **Comprehensive Testing**: 61 tests covering all functionality
 
@@ -236,7 +235,3 @@ Contributions are welcome! Please:
 - **Issues**: [GitHub Issues](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/issues)
 - **Node-RED Catalog**: [flows.nodered.org](https://flows.nodered.org/node/node-red-contrib-opcua-server-refresh)
 - **Documentation**: This README and inline code documentation
-
-## 🏷️ Keywords
-
-`node-red`, `opcua-server`, `automation`, `iiot`, `typescript`, `security`, `industrial-iot`, `opc-ua`, `scada`

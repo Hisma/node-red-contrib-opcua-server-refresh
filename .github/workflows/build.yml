@@ -124,10 +124,11 @@ jobs:
                 exit 
               } 
             } 
-            count > 0 && /^[^#]/ { 
-              print 
+            count > 0 { 
+              if (/^## \[/) exit;
+              if (!/^$/) print 
             }
-          ' CHANGELOG.md | sed '/^$/d' | head -20)
+          ' CHANGELOG.md)
           
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT

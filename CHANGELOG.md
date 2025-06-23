@@ -1,4 +1,17 @@
-# [0.2.4](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.3...v0.2.4) (2025-06-23)
+## [0.2.5](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.4...v0.2.5) (2025-06-23)
+
+### Stability Improvements
+
+* **dependencies:** Downgrade node-opcua from pre-release v2.156.0 to stable v2.154.0
+* **reliability:** Use latest stable OPC UA library version for improved production stability
+* **compatibility:** Ensure compatibility with well-tested, stable node-opcua release
+* **performance:** Eliminate potential issues from pre-release dependency versions
+
+### Technical Details
+
+This release addresses stability concerns by moving from a pre-release version of node-opcua (v2.156.0) to the latest stable release (v2.154.0).
+
+## [0.2.4](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.3...v0.2.4) (2025-06-23)
 
 ### Major Architectural Improvements
 
