@@ -41,6 +41,36 @@ jobs:
       - name: Build package
         run: npm run build
         
+      - name: Version consistency check
+        run: |
+          echo "🔍 Checking version consistency across project files..."
+          
+          # Get version from package.json
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "📦 Package version: $PACKAGE_VERSION"
+          
+          # Check if this is a minor release (0.x.0) - requires README update
+          if [[ $PACKAGE_VERSION =~ ^[0-9]+\.[1-9][0-9]*\.0$ ]]; then
+            echo "🎯 Minor release detected - checking README.md version header"
+            if ! grep -q "## 🎉 Version $PACKAGE_VERSION - Major Release" README.md; then
+              echo "❌ README.md version header doesn't match package.json version!"
+              echo "💡 Please update README.md header to: ## 🎉 Version $PACKAGE_VERSION - Major Release"
+              exit 1
+            fi
+            echo "✅ README.md version header matches"
+          else
+            echo "ℹ️  Patch release (0.0.x) - skipping README.md version check"
+          fi
+          
+          # Always check CHANGELOG.md has entry for current version
+          if ! grep -q "# \[$PACKAGE_VERSION\]" CHANGELOG.md; then
+            echo "❌ CHANGELOG.md missing entry for version $PACKAGE_VERSION"
+            echo "💡 Please add release notes to CHANGELOG.md for version $PACKAGE_VERSION"
+            exit 1
+          fi
+          
+          echo "✅ Version consistency check passed!"
+        
       - name: Security audit
         run: npm audit --audit-level=high --production
         continue-on-error: true
