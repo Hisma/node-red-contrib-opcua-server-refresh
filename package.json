@@ -12,7 +12,7 @@
   "bugs": {
     "url": "https://github.com/Hisma/node-red-contrib-opcua-server-refresh/issues"
   },
-  "main": "index.js",
+  "main": "src/server-node.js",
   "files": [
     "examples",
     "src",
@@ -21,28 +21,30 @@
   ],
   "dependencies": {
     "better-assert": "~1.0.2",
-    "debug": "~4.3.6",
-    "node-opcua": "~2.130.0",
-    "source-map-support": "~0.5.21",
-    "vm2": "~3.9.10"
+    "debug": "~4.4.1",
+    "node-opcua": "~2.156.0",
+    "source-map-support": "~0.5.21"
   },
   "scripts": {
-    "build": "npm run clean:formatter && gulp publish",
+    "build": "npm run build:ts && npm run clean:formatter && gulp publish",
+    "build:ts": "tsc -p tsconfig.build.json",
+    "build:dev": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch",
     "postinstall": "node ./create_certificates.js demo --dev -s -r ./certificates && node ./supporter.js",
-    "test": "npm run check:formatter && jest --detectOpenHandles --forceExit --logHeapUsage",
+    "test": "npm run clean:formatter && jest --detectOpenHandles --forceExit --logHeapUsage",
     "test:clearCache": "jest --clearCache",
     "test:coverage": "jest --coverage",
     "coverage": "gulp clean && rm -rf ./jcoverage && jest --coverage --detectOpenHandles --forceExit --logHeapUsage --debug",
     "coverage:ci": "jest --coverage --detectOpenHandles --forceExit --logHeapUsage --ci --silent --json --outputFile=scripts/out.json",
     "coverage:upload": "cat ./jcoverage/lcov.info | codacy-coverage --token $CODACY_PROJECT_TOKEN_OPCUA_SERVER",
-    "check:formatter": "prettier --check \"src/**/*.js\" && prettier --check \"test/**/*.js\"",
+    "check:formatter": "prettier --check \"src/**/*.ts\" && prettier --check \"test/**/*.ts\"",
     "release": "npm run clean:formatter && standard-version",
     "release:alpha": "npm run clean:formatter && npm run release -- --prerelease alpha",
-    "inspect": "jsinspect ./src > .jsinspect-results.json",
+    "inspect": "jsinspect ./src/**/*.ts > .jsinspect-results.json",
     "rewrite-changelog": "gulp changelog",
     "clean": "gulp clean",
     "clean:install": "./clean.sh",
-    "clean:formatter": "prettier --write \"src/**/*.js\" && prettier --write \"test/**/*.js\"",
+    "clean:formatter": "prettier --write \"src/**/*.ts\" && prettier --write \"test/**/*.ts\"",
     "lint:md": "remark .",
     "prepublishOnly": "npm run build",
     "dev-link": "npm install && npm run build && npm link",

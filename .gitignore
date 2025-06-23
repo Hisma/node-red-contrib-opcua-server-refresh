@@ -64,10 +64,14 @@ typings/
 
 certificates/
 jcoverage/
-docs/gen/
+# Internal documentation
+docs/
 opcuaCompact/
 code/
 
 \.jsinspect-results\.json
 
 \.DS_Store
+
+# VSCode workspace file
+node-red-contrib-opcua-server-refresh.code-workspace

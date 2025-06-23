@@ -1,101 +1,68 @@
-/**
- MIT License
- Copyright (c) 2018-2022 Klaus Landsdorf (http://node-red.plus/)
- Updated by Richard Meyer 2024
- **/
-module.exports = function (RED) {
-  "use strict";
-
-  function OPCUACompactServerRefreshNode(nodeConfig) {
-    const coreServer = require("./core/server");
-    const serverSandbox = require("./core/server-sandbox");
-
-    // Create the Node-RED node
-    RED.nodes.createNode(this, nodeConfig);
-    this.name = nodeConfig.name;
-    this.port = nodeConfig.port;
-
-    const node = this;
-    let opcuaServer;
-
-    // Initial Logging and Status Setup
-    coreServer.detailLog(`Creating node with ID: ${node.id}`);
-    coreServer.listenForErrors(node);
-    coreServer.setStatusInit(node);
-    coreServer.readConfigOfServerNode(node, nodeConfig);
-
-    // Delay Initialization based on configuration
-    const initOPCUATimer = setTimeout(() => {
-      coreServer.detailLog(
-        `Initializing OPC UA Server for node ID: ${node.id}`
-      );
-      coreServer.setStatusPending(node);
-
-      // Get server options from the core server
-      const opcuaServerOptions = coreServer.defaultServerOptions(node);
-      opcuaServerOptions.nodeset_filename = coreServer.loadOPCUANodeSets(
-        node,
-        __dirname
-      );
-
-      node.contribOPCUACompact = {};
-      node.contribOPCUACompact.eventObjects = {}; // Initialize eventObjects
-      node.contribOPCUACompact.initialized = false;
-
-      // Assign the addressSpaceScript from nodeConfig
-      if (nodeConfig.addressSpaceScript) {
-        try {
-          // Safely evaluate the addressSpaceScript as a function
-          node.contribOPCUACompact.constructAddressSpaceScript = eval(
-            `(${nodeConfig.addressSpaceScript})`
-          );
-          coreServer.debugLog(
-            `Address space script successfully loaded for node ID: ${node.id}`
-          );
-        } catch (err) {
-          node.error(`Failed to evaluate addressSpaceScript: ${err.message}`);
-          coreServer.errorLog(
-            `Address space script evaluation error: ${err.stack}`
-          );
-          coreServer.setStatusError(
-            node,
-            `Address space script error: ${err.message}`
-          );
-          return;
-        }
-      } else {
-        node.warn(
-          "No addressSpaceScript provided. The server might not construct the address space correctly."
-        );
-        coreServer.setStatusError(node, "No addressSpaceScript provided.");
-        // Depending on requirements, you might choose to proceed or halt initialization here
-      }
-
-      // Initialize the OPC UA Server with the provided options
-      opcuaServer = coreServer.initialize(node, opcuaServerOptions);
-
-      // Start the server
-      coreServer
-        .run(node, opcuaServer)
-        .then(() => {
-          // Initialize the sandbox and run the addressSpaceScript within it
-          serverSandbox.initialize(
-            node,
-            coreServer,
-            opcuaServer, // Pass the OPC UA server instance
-            opcuaServer.engine.addressSpace, // Pass the address space
-            node.contribOPCUACompact.eventObjects, // Pass eventObjects
-            (node, vm) => {
-              node.contribOPCUACompact.vm = vm;
-
-              try {
-                // Assign the addressSpaceScript function to the sandboxed context
-                vm.run(`
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const server_1 = __importDefault(require("./core/server"));
+const server_sandbox_1 = __importDefault(require("./core/server-sandbox"));
+function default_1(RED) {
+    "use strict";
+    function OPCUACompactServerRefreshNode(nodeConfig) {
+        RED.nodes.createNode(this, nodeConfig);
+        this.name = nodeConfig.name;
+        this.port = nodeConfig.port;
+        const node = this;
+        let opcuaServer;
+        server_1.default.detailLog(`Creating node with ID: ${node.id}`);
+        server_1.default.listenForErrors(node);
+        server_1.default.setStatusInit(node);
+        server_1.default.readConfigOfServerNode(node, nodeConfig);
+        const initOPCUATimer = setTimeout(() => {
+            server_1.default.detailLog(`Initializing OPC UA Server for node ID: ${node.id}`);
+            server_1.default.setStatusPending(node);
+            const opcuaServerOptions = server_1.default.defaultServerOptions(node);
+            opcuaServerOptions.nodeset_filename = server_1.default.loadOPCUANodeSets(node, __dirname);
+            node.contribOPCUACompact = {};
+            node.contribOPCUACompact.eventObjects = {};
+            node.contribOPCUACompact.initialized = false;
+            if (nodeConfig.addressSpaceScript) {
+                try {
+                    node.contribOPCUACompact.constructAddressSpaceScript = eval(`(${nodeConfig.addressSpaceScript})`);
+                    server_1.default.debugLog(`Address space script successfully loaded for node ID: ${node.id}`);
+                }
+                catch (err) {
+                    const error = err;
+                    node.error(`Failed to evaluate addressSpaceScript: ${error.message}`);
+                    server_1.default.errorLog(`Address space script evaluation error: ${error.stack || error.message}`);
+                    server_1.default.setStatusError(node, `Address space script error: ${error.message}`);
+                    return;
+                }
+            }
+            else {
+                node.warn("No addressSpaceScript provided. The server might not construct the address space correctly.");
+                server_1.default.setStatusError(node, "No addressSpaceScript provided.");
+            }
+            opcuaServer = server_1.default.initialize(node, opcuaServerOptions);
+            server_1.default
+                .run(node, opcuaServer)
+                .then(() => {
+                if (!opcuaServer) {
+                    throw new Error("OPC UA Server not initialized");
+                }
+                const addressSpace = opcuaServer.engine.addressSpace;
+                if (!addressSpace) {
+                    throw new Error("Address space not available");
+                }
+                server_sandbox_1.default.initialize(node, server_1.default, opcuaServer, addressSpace, node.contribOPCUACompact?.eventObjects || {}, (node, vm) => {
+                    if (!node.contribOPCUACompact) {
+                        node.contribOPCUACompact = {};
+                    }
+                    node.contribOPCUACompact.vm = vm;
+                    try {
+                        vm.run(`
                   node.contribOPCUACompact.constructAddressSpaceScript = node.contribOPCUACompact.constructAddressSpaceScript;
                 `);
-
-                // Execute the addressSpaceScript within the sandbox
-                vm.run(`
+                        vm.run(`
                   node.contribOPCUACompact.constructAddressSpaceScript(
                     server,
                     addressSpace,
@@ -108,77 +75,66 @@ module.exports = function (RED) {
                     }
                   );
                 `);
-
-                node.contribOPCUACompact.initialized = true;
-                node.emit("server_node_running");
-                coreServer.setStatusActive(node);
-              } catch (err) {
-                node.error(
-                  `Error executing addressSpaceScript: ${err.message}`
-                );
-                coreServer.errorLog(
-                  `Address space script execution error: ${err.stack}`
-                );
-                coreServer.setStatusError(
-                  node,
-                  `Address space script execution error: ${err.message}`
-                );
-              }
+                        node.contribOPCUACompact.initialized = true;
+                        node.emit("server_node_running");
+                        server_1.default.setStatusActive(node);
+                    }
+                    catch (err) {
+                        const error = err;
+                        node.error(`Error executing addressSpaceScript: ${error.message}`);
+                        server_1.default.errorLog(`Address space script execution error: ${error.stack || error.message}`);
+                        server_1.default.setStatusError(node, `Address space script execution error: ${error.message}`);
+                    }
+                });
+            })
+                .catch((err) => {
+                node.warn(err);
+                node.emit("server_node_error", err);
+                server_1.default.setStatusError(node, `Server run error: ${err.message}`);
+            });
+        }, node.delayToInit || 0);
+        function cleanSandboxTimer(node, done) {
+            if (node.outstandingTimers) {
+                while (node.outstandingTimers.length > 0) {
+                    const timer = node.outstandingTimers.pop();
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+                }
             }
-          );
-        })
-        .catch((err) => {
-          /* istanbul ignore next */
-          node.warn(err);
-          /* istanbul ignore next */
-          node.emit("server_node_error", err);
-          coreServer.setStatusError(node, `Server run error: ${err.message}`);
-        });
-    }, node.delayToInit);
-
-    // Function to clean up outstanding timers and intervals
-    function cleanSandboxTimer(node, done) {
-      if (node.outstandingTimers) {
-        while (node.outstandingTimers.length > 0) {
-          clearTimeout(node.outstandingTimers.pop());
+            if (node.outstandingIntervals) {
+                while (node.outstandingIntervals.length > 0) {
+                    const interval = node.outstandingIntervals.pop();
+                    if (interval) {
+                        clearInterval(interval);
+                    }
+                }
+            }
+            server_1.default.detailLog(`Cleaned up timers for node ID: ${node.id}`);
+            done();
         }
-      }
-      if (node.outstandingIntervals) {
-        while (node.outstandingIntervals.length > 0) {
-          clearInterval(node.outstandingIntervals.pop());
+        function closeServer(done) {
+            if (initOPCUATimer) {
+                clearTimeout(initOPCUATimer);
+            }
+            if (opcuaServer) {
+                server_1.default.stop(node, opcuaServer, () => {
+                    setTimeout(() => {
+                        server_1.default.setStatusClosed(node);
+                        cleanSandboxTimer(node, done);
+                    }, node.delayToClose || 0);
+                });
+            }
+            else {
+                cleanSandboxTimer(node, done);
+            }
         }
-      }
-      coreServer.detailLog(`Cleaned up timers for node ID: ${node.id}`);
-      done();
-    }
-
-    // Function to gracefully close the server
-    function closeServer(done) {
-      if (initOPCUATimer) {
-        clearTimeout(initOPCUATimer);
-      }
-
-      if (opcuaServer) {
-        coreServer.stop(node, opcuaServer, () => {
-          setTimeout(() => {
-            coreServer.setStatusClosed(node);
-            cleanSandboxTimer(node, done);
-          }, node.delayToClose || 0); // Default to 0 if delayToClose is not set
+        node.on("close", (done) => {
+            closeServer(done);
         });
-      } else {
-        cleanSandboxTimer(node, done);
-      }
     }
-
-    // Handle the node being closed (e.g., when Node-RED is stopped or the flow is redeployed)
-    node.on("close", (done) => {
-      closeServer(done);
-    });
-  }
-
-  // Register the Node-RED node type
-  RED.nodes.registerType("opcua-compact-server-refresh", OPCUACompactServerRefreshNode);
-
-  // Register the node in the Node-RED library (optional, based on your setup)
-  RED.library.register("opcua");
-};
+    RED.nodes.registerType("opcua-compact-server-refresh", OPCUACompactServerRefreshNode);
+    RED.library.register("opcua");
+}
+exports.default = default_1;
+;
