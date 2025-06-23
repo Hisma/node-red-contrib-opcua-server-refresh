@@ -62,8 +62,8 @@ jobs:
             echo "ℹ️  Patch release (0.0.x) - skipping README.md version check"
           fi
           
-          # Always check CHANGELOG.md has entry for current version
-          if ! grep -q "# \[$PACKAGE_VERSION\]" CHANGELOG.md; then
+          # Always check CHANGELOG.md has entry for current version (supports link format)
+          if ! grep -q "# \[$PACKAGE_VERSION\](" CHANGELOG.md; then
             echo "❌ CHANGELOG.md missing entry for version $PACKAGE_VERSION"
             echo "💡 Please add release notes to CHANGELOG.md for version $PACKAGE_VERSION"
             exit 1
