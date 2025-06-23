@@ -2,7 +2,7 @@
  MIT License
  Copyright (c) 2018-2022 Klaus Landsdorf (http://node-red.plus/)
  Copyright (c) 2019 Sterfive (https://www.sterfive.com/)
- Updated by Richard Meyer 2024
+ Updated by Richard Meyer 2025
  **/
 import * as vm from "vm";
 import { OPCUAServer, AddressSpace } from "node-opcua";
@@ -20,6 +20,7 @@ const serverSandboxModule: SandboxModule = {
   initialize: (
     node: NodeRedNode,
     coreServer: CoreServerModule,
+    opcuaLibrary: any,
     server: OPCUAServer,
     addressSpace: AddressSpace,
     eventObjects: EventObjects,
@@ -49,7 +50,7 @@ const serverSandboxModule: SandboxModule = {
     const sandbox: SandboxContext = {
       node,
       coreServer,
-      opcua: coreServer.opcua, // Expose the opcua module
+      opcua: opcuaLibrary, // Use the passed opcua library instead of coreServer.opcua
       server, // Expose the OPC UA server instance
       addressSpace, // Expose the address space
       eventObjects, // Now includes sandboxFlowContext

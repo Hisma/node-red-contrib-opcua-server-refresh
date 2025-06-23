@@ -87,15 +87,32 @@ jobs:
       - name: Extract version & release notes from CHANGELOG
         id: extract_changelog
         run: |
-          # Grab the version from the top header
-          VERSION=$(grep -m1 '^# \[' CHANGELOG.md | sed -E 's/^# \[([^]]+)\].*/\1/')
+          # Extract version from the first changelog entry (handles URL format)
+          VERSION=$(grep -m1 '^# \[' CHANGELOG.md | sed -E 's/^# \[([^]]+)\](\([^)]*\))?.*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
 
-          # Capture the notes between this header and the next
-          BODY=$(awk "/^# \[$VERSION\]/ {flag=1; next} /^# \[/ && flag {exit} flag" CHANGELOG.md)
+          # Extract release notes between the first and second version headers
+          BODY=$(awk '
+            /^# \[/ { 
+              if (count == 0) { 
+                count++; 
+                next 
+              } else { 
+                exit 
+              } 
+            } 
+            count > 0 && /^[^#]/ { 
+              print 
+            }
+          ' CHANGELOG.md | sed '/^$/d' | head -20)
+          
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "Extracted release notes:"
+          echo "$BODY"
 
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
@@ -150,12 +167,25 @@ jobs:
           echo "3. Submit: node-red-contrib-opcua-server-refresh"
           echo "4. Monitor: https://flows.nodered.org/node/node-red-contrib-opcua-server-refresh"
 
+      - name: Create Git Tag
+        if: success()
+        run: |
+          VERSION="v${{ steps.extract_changelog.outputs.version }}"
+          echo "Creating tag: $VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
       - name: Create GitHub Release
         if: success()
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.extract_changelog.outputs.version }}
-          release_name: Release v${{ steps.extract_changelog.outputs.version }}
+          name: Release v${{ steps.extract_changelog.outputs.version }}
           body: ${{ steps.extract_changelog.outputs.body }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

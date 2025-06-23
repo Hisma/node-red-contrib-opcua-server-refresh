@@ -1,10 +1,5 @@
 import { OPCUAServer, AddressSpace } from "node-opcua";
-import {
-  NodeRedNode,
-  NodeContext,
-  FlowContext,
-  GlobalContext,
-} from "./node-red";
+import { NodeRedNode, FlowContext, GlobalContext } from "./node-red";
 import { CoreServerModule } from "./opcua-server";
 
 export interface SandboxContext {
@@ -65,6 +60,7 @@ export interface SandboxModule {
   initialize: (
     node: NodeRedNode,
     coreServer: CoreServerModule,
+    opcuaLibrary: any,
     server: OPCUAServer,
     addressSpace: AddressSpace,
     eventObjects: EventObjects,

@@ -6,6 +6,7 @@
 import { jest } from "@jest/globals";
 import serverSandboxModule from "../../src/core/server-sandbox";
 import { OPCUAServer, AddressSpace } from "node-opcua";
+import * as opcuaLibrary from "node-opcua";
 import {
   createMockNodeRedNode,
   createMockOPCUAServer,
@@ -35,6 +36,7 @@ describe("Server Sandbox Module", () => {
     serverSandboxModule.initialize(
       mockNode,
       coreServer,
+      opcuaLibrary, // Real opcua library
       mockServer,
       mockAddressSpace,
       eventObjects,

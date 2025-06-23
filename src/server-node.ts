@@ -1,16 +1,11 @@
 /**
  MIT License
  Copyright (c) 2018-2022 Klaus Landsdorf (http://node-red.plus/)
- Updated by Richard Meyer 2024
+ Updated by Richard Meyer 2025
  **/
 import { OPCUAServer } from "node-opcua";
-import {
-  NodeRED,
-  NodeRedNode,
-  NodeConfig,
-  CoreServerModule,
-  SandboxModule,
-} from "./types";
+import * as opcuaLibrary from "node-opcua";
+import { NodeRED, NodeRedNode, NodeConfig } from "./types";
 import coreServer from "./core/server";
 import serverSandbox from "./core/server-sandbox";
 
@@ -105,6 +100,7 @@ export default function (RED: NodeRED): void {
           serverSandbox.initialize(
             node,
             coreServer,
+            opcuaLibrary, // Pass the actual node-opcua library
             opcuaServer, // Pass the OPC UA server instance
             addressSpace, // Pass the address space
             node.contribOPCUACompact?.eventObjects || {}, // Pass eventObjects

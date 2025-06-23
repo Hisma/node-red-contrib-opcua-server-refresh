@@ -1,4 +1,15 @@
-# [0.2.2](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.1...v0.2.2) (2025-06-23)
+# [0.2.3](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.2...v0.2.3) (2025-06-23)
+
+### Bug Fixes
+
+* **vm:** Fix critical "bindVariable returns invalid result" error in address space scripts
+* **sandbox:** Pass real node-opcua library to VM instead of empty object for proper constructor access
+* **testing:** Update all tests to use actual opcua library for realistic validation
+* **ci/cd:** Fix GitHub release creation with proper changelog extraction and modern actions
+* **workflow:** Update to use softprops/action-gh-release@v1 instead of deprecated create-release action
+* **types:** Remove unused NodeContext import from sandbox types
+
+## [0.2.2](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.1...v0.2.2) (2025-06-23)
 
 ### Bug Fixes
 

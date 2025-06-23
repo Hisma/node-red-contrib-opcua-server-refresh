@@ -7,6 +7,7 @@
  */
 
 import { OPCUAServer, AddressSpace, Variant, DataType } from "node-opcua";
+import * as opcuaLibrary from "node-opcua";
 import serverSandbox from "../../src/core/server-sandbox";
 import coreServer from "../../src/core/server";
 import { createMockNodeRedNode, createMockOPCUAServer } from "../utils/mocks";
@@ -44,6 +45,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
@@ -128,6 +130,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
@@ -189,6 +192,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
@@ -235,6 +239,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
@@ -279,6 +284,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
@@ -330,6 +336,7 @@ describe("Address Space Script Integration", () => {
       serverSandbox.initialize(
         mockNode,
         coreServer,
+        opcuaLibrary, // Real opcua library
         mockServer,
         mockAddressSpace,
         eventObjects,
