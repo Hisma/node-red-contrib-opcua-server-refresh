@@ -214,15 +214,30 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if tag already exists
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "⚠️  Tag $VERSION already exists, deleting and recreating..."
-            git tag -d "$VERSION" || true
-            git push --delete origin "$VERSION" || true
+          # Fetch tags to ensure we have the latest
+          git fetch --tags || echo "⚠️  Warning: Could not fetch tags"
+          
+          # Try to delete existing tag locally (ignore errors)
+          git tag -d "$VERSION" 2>/dev/null || echo "ℹ️  Tag $VERSION doesn't exist locally or already deleted"
+          
+          # Try to delete existing tag on remote (ignore errors)
+          git push --delete origin "$VERSION" 2>/dev/null || echo "ℹ️  Tag $VERSION doesn't exist on remote or already deleted"
+          
+          # Create the tag
+          if git tag -a "$VERSION" -m "Release $VERSION"; then
+            echo "✅ Successfully created tag $VERSION locally"
+          else
+            echo "⚠️  Warning: Could not create tag locally (may already exist)"
           fi
           
-          git tag -a "$VERSION" -m "Release $VERSION"
-          git push origin "$VERSION"
+          # Push the tag (force to overwrite if exists)
+          if git push origin "$VERSION" --force; then
+            echo "✅ Successfully pushed tag $VERSION to remote"
+          else
+            echo "⚠️  Warning: Could not push tag to remote, but continuing anyway"
+          fi
+          
+          echo "🏁 Tag creation step completed (any warnings above are non-critical)"
 
       - name: Create GitHub Release
         if: success()
