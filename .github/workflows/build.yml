@@ -91,20 +91,26 @@ jobs:
           echo "First few lines of CHANGELOG.md:"
           head -5 CHANGELOG.md
           
-          # Extract version from the first changelog entry (handles URL format)
+          # Extract version from the first changelog entry
           FIRST_LINE=$(head -1 CHANGELOG.md)
           echo "First changelog line: '$FIRST_LINE'"
           
+          # Try to extract version with square brackets first [0.2.5]
           VERSION=$(echo "$FIRST_LINE" | grep -o '\[.*\]' | tr -d '[]' | cut -d'(' -f1)
-          echo "Extracted version: '$VERSION'"
           
-          # Validate version is not empty
+          # If that fails, try without square brackets ## 0.2.5
           if [ -z "$VERSION" ]; then
-            echo "❌ ERROR: Version extraction failed - trying alternative method"
-            # Alternative extraction method with ## format
-            VERSION=$(grep -m1 '^## \[' CHANGELOG.md | sed -E 's/^## \[([^]]+)\](\([^)]*\))?.*/\1/')
-            echo "Alternative extraction result: '$VERSION'"
+            echo "No square brackets found, trying without brackets..."
+            VERSION=$(echo "$FIRST_LINE" | sed -E 's/^##\s+([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           fi
+          
+          # If still empty, try alternative patterns
+          if [ -z "$VERSION" ]; then
+            echo "Trying alternative pattern..."
+            VERSION=$(grep -m1 '^##' CHANGELOG.md | sed -E 's/^##\s+\[?([0-9]+\.[0-9]+\.[0-9]+)\]?.*/\1/')
+          fi
+          
+          echo "Extracted version: '$VERSION'"
           
           if [ -z "$VERSION" ]; then
             echo "❌ CRITICAL: All version extraction methods failed"
@@ -115,8 +121,9 @@ jobs:
           echo "✅ Successfully extracted version: $VERSION"
 
           # Extract release notes between the first and second version headers
+          # This works for both ## 0.2.5 and ## [0.2.5] formats
           BODY=$(awk '
-            /^\[.*\].*\(.*\)/ { 
+            /^##\s+(\[?[0-9]+\.[0-9]+\.[0-9]+\]?|\[[^]]+\])/ { 
               if (count == 0) { 
                 count++; 
                 next 
@@ -125,10 +132,13 @@ jobs:
               } 
             } 
             count > 0 { 
-              if (/^## \[/) exit;
-              if (!/^$/) print 
+              if (/^$/ && NR > 2) next;  # Skip empty lines except at the very beginning
+              print 
             }
           ' CHANGELOG.md)
+          
+          # Clean up the body - remove leading/trailing whitespace
+          BODY=$(echo "$BODY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
           
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$BODY" >> $GITHUB_OUTPUT
