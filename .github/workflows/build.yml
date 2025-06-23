@@ -92,17 +92,17 @@ jobs:
           head -5 CHANGELOG.md
           
           # Extract version from the first changelog entry (handles URL format)
-          FIRST_LINE=$(grep -m1 '^# \[' CHANGELOG.md)
+          FIRST_LINE=$(head -1 CHANGELOG.md)
           echo "First changelog line: '$FIRST_LINE'"
           
-          VERSION=$(echo "$FIRST_LINE" | sed -E 's/^# \[([^]]+)\](\([^)]*\))?.*/\1/')
+          VERSION=$(echo "$FIRST_LINE" | grep -o '\[.*\]' | tr -d '[]' | cut -d'(' -f1)
           echo "Extracted version: '$VERSION'"
           
           # Validate version is not empty
           if [ -z "$VERSION" ]; then
             echo "❌ ERROR: Version extraction failed - trying alternative method"
-            # Alternative extraction method
-            VERSION=$(head -1 CHANGELOG.md | grep -o '\[.*\]' | tr -d '[]' | cut -d'(' -f1)
+            # Alternative extraction method with ## format
+            VERSION=$(grep -m1 '^## \[' CHANGELOG.md | sed -E 's/^## \[([^]]+)\](\([^)]*\))?.*/\1/')
             echo "Alternative extraction result: '$VERSION'"
           fi
           
@@ -116,7 +116,7 @@ jobs:
 
           # Extract release notes between the first and second version headers
           BODY=$(awk '
-            /^# \[/ { 
+            /^\[.*\].*\(.*\)/ { 
               if (count == 0) { 
                 count++; 
                 next 
