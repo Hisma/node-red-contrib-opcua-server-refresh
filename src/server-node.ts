@@ -115,25 +115,32 @@ export default function (RED: NodeRED): void {
               node.contribOPCUACompact.vm = vm;
 
               try {
-                // Assign the addressSpaceScript function to the sandboxed context
-                vm.run(`
-                  node.contribOPCUACompact.constructAddressSpaceScript = node.contribOPCUACompact.constructAddressSpaceScript;
-                `);
-
                 // Execute the addressSpaceScript within the sandbox
-                vm.run(`
-                  node.contribOPCUACompact.constructAddressSpaceScript(
-                    server,
-                    addressSpace,
-                    opcua,
-                    eventObjects,
-                    () => {
-                      // Address space construction completed
-                      node.status({ fill: "green", shape: "dot", text: "active" });
-                      node.emit("server_running");
-                    }
+                // We need to pass the function code as a string to the VM
+                const scriptFunction =
+                  node.contribOPCUACompact.constructAddressSpaceScript;
+                if (typeof scriptFunction === "function") {
+                  // Convert function to string and execute in VM
+                  const functionCode = `(${scriptFunction.toString()})`;
+                  vm.run(`
+                    const addressSpaceFunction = ${functionCode};
+                    addressSpaceFunction(
+                      server,
+                      addressSpace,
+                      opcua,
+                      eventObjects,
+                      () => {
+                        // Address space construction completed
+                        node.status({ fill: "green", shape: "dot", text: "active" });
+                        node.emit("server_running");
+                      }
+                    );
+                  `);
+                } else {
+                  throw new Error(
+                    "Address space script is not a valid function"
                   );
-                `);
+                }
 
                 node.contribOPCUACompact.initialized = true;
                 node.emit("server_node_running");

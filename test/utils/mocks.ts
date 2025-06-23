@@ -212,9 +212,24 @@ export function createMockOPCUAServer(): jest.Mocked<OPCUAServer> {
  */
 export function createMockAddressSpace(): jest.Mocked<AddressSpace> {
   const mockNamespace = {
-    addVariable: jest.fn().mockReturnValue({ nodeId: "test-variable-id" }),
+    addVariable: jest.fn().mockReturnValue({
+      nodeId: "test-variable-id",
+      setValueFromSource: jest.fn(),
+    }),
     addObject: jest.fn().mockReturnValue({ nodeId: "test-object-id" }),
     addMethod: jest.fn().mockReturnValue({ nodeId: "test-method-id" }),
+    addFolder: jest.fn().mockReturnValue({ nodeId: "test-folder-id" }),
+    addAnalogDataItem: jest.fn().mockReturnValue({ nodeId: "test-analog-id" }),
+    addView: jest.fn().mockReturnValue({
+      nodeId: "test-view-id",
+      addReference: jest.fn(),
+    }),
+  };
+
+  const mockRootFolder = {
+    nodeId: "RootFolder",
+    objects: { nodeId: "objects-folder" },
+    views: { nodeId: "views-folder" },
   };
 
   const mockAddressSpace = {
@@ -224,10 +239,13 @@ export function createMockAddressSpace(): jest.Mocked<AddressSpace> {
     addVariable: jest.fn(),
     addObject: jest.fn(),
     addMethod: jest.fn(),
-    findNode: jest.fn(),
-    rootFolder: {
-      objects: { nodeId: "objects-folder" },
-    } as any,
+    findNode: jest.fn().mockImplementation((nodeId: unknown) => {
+      if (nodeId === "RootFolder") {
+        return mockRootFolder;
+      }
+      return { nodeId };
+    }),
+    rootFolder: mockRootFolder,
     dispose: jest.fn(),
   } as unknown as jest.Mocked<AddressSpace>;
 

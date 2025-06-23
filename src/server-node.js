@@ -59,22 +59,27 @@ function default_1(RED) {
                     }
                     node.contribOPCUACompact.vm = vm;
                     try {
-                        vm.run(`
-                  node.contribOPCUACompact.constructAddressSpaceScript = node.contribOPCUACompact.constructAddressSpaceScript;
-                `);
-                        vm.run(`
-                  node.contribOPCUACompact.constructAddressSpaceScript(
-                    server,
-                    addressSpace,
-                    opcua,
-                    eventObjects,
-                    () => {
-                      // Address space construction completed
-                      node.status({ fill: "green", shape: "dot", text: "active" });
-                      node.emit("server_running");
-                    }
-                  );
-                `);
+                        const scriptFunction = node.contribOPCUACompact.constructAddressSpaceScript;
+                        if (typeof scriptFunction === 'function') {
+                            const functionCode = `(${scriptFunction.toString()})`;
+                            vm.run(`
+                    const addressSpaceFunction = ${functionCode};
+                    addressSpaceFunction(
+                      server,
+                      addressSpace,
+                      opcua,
+                      eventObjects,
+                      () => {
+                        // Address space construction completed
+                        node.status({ fill: "green", shape: "dot", text: "active" });
+                        node.emit("server_running");
+                      }
+                    );
+                  `);
+                        }
+                        else {
+                            throw new Error('Address space script is not a valid function');
+                        }
                         node.contribOPCUACompact.initialized = true;
                         node.emit("server_node_running");
                         server_1.default.setStatusActive(node);

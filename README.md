@@ -6,7 +6,7 @@ A modern, secure, and TypeScript-powered OPC UA server for Node-RED based on the
 [![Build Status](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/workflows/Build,%20Test,%20and%20Publish/badge.svg)](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🎉 Version 0.2.1 - Major Release
+## 🎉 Major Release Updates
 
 This release represents a complete modernization of the OPC UA server with significant improvements in security, reliability, and developer experience.
 

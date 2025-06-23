@@ -1,4 +1,14 @@
-# [0.2.1](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.0...v0.2.1) (2025-06-23)
+# [0.2.2](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.1...v0.2.2) (2025-06-23)
+
+### Bug Fixes
+
+* **vm:** Fix address space script execution in VM context
+* **runtime:** Resolve "bindVariable returns invalid result" error that prevented OPC UA scripts from working
+* **sandbox:** Properly pass function code to VM for execution using string interpolation
+* **compatibility:** Ensure OPC UA Variant/DataType constructors work correctly in address space scripts
+* **testing:** Add comprehensive test suite validating real-world address space script patterns
+
+## [0.2.1](https://github.com/Hisma/node-red-contrib-opcua-server-refresh/compare/v0.2.0...v0.2.1) (2025-06-23)
 
 ### Bug Fixes
 
