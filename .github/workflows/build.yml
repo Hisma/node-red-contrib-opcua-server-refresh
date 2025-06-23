@@ -87,10 +87,32 @@ jobs:
       - name: Extract version & release notes from CHANGELOG
         id: extract_changelog
         run: |
+          echo "🔍 Debugging changelog extraction..."
+          echo "First few lines of CHANGELOG.md:"
+          head -5 CHANGELOG.md
+          
           # Extract version from the first changelog entry (handles URL format)
-          VERSION=$(grep -m1 '^# \[' CHANGELOG.md | sed -E 's/^# \[([^]]+)\](\([^)]*\))?.*/\1/')
+          FIRST_LINE=$(grep -m1 '^# \[' CHANGELOG.md)
+          echo "First changelog line: '$FIRST_LINE'"
+          
+          VERSION=$(echo "$FIRST_LINE" | sed -E 's/^# \[([^]]+)\](\([^)]*\))?.*/\1/')
+          echo "Extracted version: '$VERSION'"
+          
+          # Validate version is not empty
+          if [ -z "$VERSION" ]; then
+            echo "❌ ERROR: Version extraction failed - trying alternative method"
+            # Alternative extraction method
+            VERSION=$(head -1 CHANGELOG.md | grep -o '\[.*\]' | tr -d '[]' | cut -d'(' -f1)
+            echo "Alternative extraction result: '$VERSION'"
+          fi
+          
+          if [ -z "$VERSION" ]; then
+            echo "❌ CRITICAL: All version extraction methods failed"
+            exit 1
+          fi
+          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
+          echo "✅ Successfully extracted version: $VERSION"
 
           # Extract release notes between the first and second version headers
           BODY=$(awk '
@@ -111,8 +133,7 @@ jobs:
           echo "$BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          echo "Extracted release notes:"
-          echo "$BODY"
+          echo "✅ Extracted release notes (${#BODY} characters)"
 
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
@@ -172,8 +193,23 @@ jobs:
         run: |
           VERSION="v${{ steps.extract_changelog.outputs.version }}"
           echo "Creating tag: $VERSION"
+          
+          # Validate version is not empty
+          if [ -z "${{ steps.extract_changelog.outputs.version }}" ]; then
+            echo "❌ ERROR: Version extraction failed - version is empty"
+            exit 1
+          fi
+          
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if tag already exists
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "⚠️  Tag $VERSION already exists, deleting and recreating..."
+            git tag -d "$VERSION" || true
+            git push --delete origin "$VERSION" || true
+          fi
+          
           git tag -a "$VERSION" -m "Release $VERSION"
           git push origin "$VERSION"
 
